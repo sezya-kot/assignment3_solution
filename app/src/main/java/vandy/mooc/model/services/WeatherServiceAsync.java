@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.RemoteException;
 import android.util.Log;
 
 /**
@@ -47,7 +48,8 @@ public class WeatherServiceAsync
      *            The context of the calling component.
      */
     public static Intent makeIntent(Context context) {
-        // TODO -- you fill in here.
+        // TODO -x- you fill in here.
+        return new Intent(context, WeatherServiceAsync.class);
     }
     
     /**
@@ -108,7 +110,29 @@ public class WeatherServiceAsync
             @Override
             public void getCurrentWeather(final String location,
                                           final WeatherResults callback) {
-                // TODO -- you fill in here.
+                // TODO -x?- you fill in here.
+                mExecutorService.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<WeatherData> list = getWeatherResults(location);
+                        if (list != null) {
+                            try {
+                                callback.sendResults(list.get(0));
+                            } catch (RemoteException e) {
+                                Log.e(TAG, "Some Remote Exception", e);
+                            }
+                        } else {
+                            try {
+                                callback.sendError(
+                                        (mErrorMessage != null)
+                                        ? mErrorMessage
+                                        : "Some problem with connection");
+                            } catch (RemoteException e) {
+                                Log.e(TAG, "Some Remote Exception", e);
+                            }
+                        }
+                    }
+                });
             }
         };
 }

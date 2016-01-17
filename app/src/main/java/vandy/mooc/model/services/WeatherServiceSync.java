@@ -36,7 +36,8 @@ public class WeatherServiceSync
      *            The context of the calling component.
      */
     public static Intent makeIntent(Context context) {
-        // TODO -- you fill in here.
+        // TODO -x- you fill in here.
+        return new Intent(context, WeatherServiceSync.class);
     }
 
     /**
@@ -70,6 +71,8 @@ public class WeatherServiceSync
             public List<WeatherData> getCurrentWeather(String location)
                 throws RemoteException {
 
-                // TODO -- you fill in here.
+                // TODO -x- you fill in here.
+                return getWeatherResults(location);
+            }
         };
 }

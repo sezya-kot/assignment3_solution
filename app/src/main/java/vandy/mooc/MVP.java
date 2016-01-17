@@ -71,7 +71,7 @@ public interface MVP {
          *
          * @param weatherData
          *            WeatherData to display
-         * @param errorReason
+         * @param errorMessage
          *            Reason that weatherData is null
          */
         public void displayResults(WeatherData weatherData,

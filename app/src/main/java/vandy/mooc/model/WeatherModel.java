@@ -11,7 +11,11 @@ import vandy.mooc.model.aidl.WeatherRequest;
 import vandy.mooc.model.aidl.WeatherResults;
 import vandy.mooc.model.services.WeatherServiceAsync;
 import vandy.mooc.model.services.WeatherServiceSync;
+
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -44,9 +48,21 @@ public class WeatherModel
     // TODO -- define ServiceConnetions to connect to the
     // WeatherServiceSync and WeatherServiceAsync.
 
+    ServiceConnection mSericeConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
     /**
      * Hook method called when a new WeatherModel instance is created
-     * to initialize the ServicConnections and bind to the WeatherService*.
+     * to initialize the ServiceConnections and bind to the WeatherService*.
      * 
      * @param presenter
      *            A reference to the Presenter layer.
@@ -96,7 +112,8 @@ public class WeatherModel
                 throws RemoteException {
                 // Pass the results back to the Presenter's
                 // displayResults() method.
-                // TODO -- you fill in here.
+                // TODO -x- you fill in here.
+                mPresenter.get().displayResults(weatherResults, null);
             }
 
             /**
@@ -108,9 +125,10 @@ public class WeatherModel
                 throws RemoteException {
                 // Pass the results back to the Presenter's
                 // displayResults() method.
-                // TODO -- you fill in here.
+                // TODO -x- you fill in here.
+                mPresenter.get().displayResults(null, reason);
             }
-	};
+        };
 
     /**
      * Initiate the service binding protocol.

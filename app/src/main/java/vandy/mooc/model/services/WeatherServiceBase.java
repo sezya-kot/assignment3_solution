@@ -23,9 +23,9 @@ import android.util.Log;
 public class WeatherServiceBase 
        extends LifecycleLoggingService {
     /**
-     * Appid needed to access the service.  TODO -- fill in with your Appid.
+     * Appid needed to access the service.  TODO -x- fill in with your Appid.
      */
-    private final String mAppid = "";
+    private final String mAppid = "1306fe0bc1aaac34cb09fd8bdab5b3bc";
 
     /**
      * URL to the Weather Service web service.
@@ -51,14 +51,18 @@ public class WeatherServiceBase
     public static class WeatherCache 
            extends ExecutorServiceTimeoutCache<String, List<WeatherData>> {}
 
+    private WeatherCache mCache;
+
+    protected String mErrorMessage;
+
     /**
      * Hook method called when the Service is created.
      */
     @Override
     public void onCreate() {
         super.onCreate();
-
-        // TODO -- you fill in here.
+        // TODO -x?- you fill in here.
+        mCache = new WeatherCache();
     }
 
     /**
@@ -69,11 +73,12 @@ public class WeatherServiceBase
     public void onDestroy() {
         super.onDestroy();
 
-        // TODO -- you fill in here.
+        // TODO -x?- you fill in here.
+        mCache = null;
     }
 
     /**
-     * Contitionally queries the Weather Service web service to obtain
+     * Conditionally queries the Weather Service web service to obtain
      * a List of WeatherData corresponding to the @a location if it's
      * been more than 10 seconds since the last query to the Weather
      * Service.  Otherwise, simply return the cached results.
@@ -83,7 +88,14 @@ public class WeatherServiceBase
               "Looking up results in the cache for "
               + location);
 
-        // TODO -- you fill in here.
+        // TODO -x- you fill in here.
+        List<WeatherData> weatherDataList;
+        if (mCache.get(location) != null) {
+            return mCache.get(location);
+        } else {
+            weatherDataList = getResultsFromWeatherService(location);
+            mCache.put(location, weatherDataList, DEFAULT_CACHE_TIMEOUT);
+            return getResultsFromWeatherService(location);
         }
     }
 
@@ -142,12 +154,12 @@ public class WeatherServiceBase
             // Return the List of WeatherData.
             return returnList;
         } else {
-            Log.d(TAG, 
-                  returnList.get(0).getMessage()
-                  + " \""
-                  + location
-                  + "\"");
-
+            mErrorMessage = returnList.get(0).getMessage();
+            Log.d(TAG,
+                    mErrorMessage
+                            + " \""
+                            + location
+                            + "\"");
             return null;
         }
     }
