@@ -15,6 +15,8 @@ import vandy.mooc.model.services.WeatherServiceSync;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -27,12 +29,12 @@ import android.util.Log;
  * by the GenericPresenter framework.
  */
 public class WeatherModel
-       implements MVP.ProvidedModelOps {
+        implements MVP.ProvidedModelOps {
     /**
      * Debugging tag used by the Android logger.
      */
-    protected final static String TAG = 
-        WeatherModel.class.getSimpleName();
+    protected final static String TAG =
+            WeatherModel.class.getSimpleName();
 
     /**
      * A WeakReference used to access methods in the Presenter layer.
@@ -45,34 +47,49 @@ public class WeatherModel
      */
     private String mLocation;
 
-    // TODO -- define ServiceConnetions to connect to the
+    // TODO -x- define ServiceConnetions to connect to the
     // WeatherServiceSync and WeatherServiceAsync.
 
-    ServiceConnection mSericeConnection = new ServiceConnection() {
+    WeatherCall mWeatherCall;
+
+    WeatherRequest mWeatherRequest;
+
+    ServiceConnection mServiceConnectionSync = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-
+            mWeatherCall = WeatherCall.Stub.asInterface(service);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            mWeatherCall = null;
+        }
+    };
 
+    ServiceConnection mServiceConnectionAsync = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mWeatherRequest = WeatherRequest.Stub.asInterface(service);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mWeatherRequest = null;
         }
     };
 
     /**
      * Hook method called when a new WeatherModel instance is created
      * to initialize the ServiceConnections and bind to the WeatherService*.
-     * 
-     * @param presenter
-     *            A reference to the Presenter layer.
+     *
+     * @param presenter A reference to the Presenter layer.
      */
     @Override
     public void onCreate(MVP.RequiredPresenterOps presenter) {
         // Set the WeakReference.
         mPresenter = new WeakReference<>(presenter);
 
-        // TODO -- you fill in here to initialize the WeatherService*.
+        // TODO -x?- you fill in here to initialize the WeatherService*.
 
         // Bind to the services.
         bindService();
@@ -87,7 +104,7 @@ public class WeatherModel
         // configurations.
         if (isChangingConfigurations)
             Log.d(TAG,
-                  "Simply changing configurations, no need to destroy the Service");
+                    "Simply changing configurations, no need to destroy the Service");
         else
             unbindService();
     }
@@ -96,53 +113,80 @@ public class WeatherModel
      * The implementation of the WeatherResults AIDL Interface, which
      * will be passed to the Weather Web service using the
      * WeatherRequest.getCurrentWeather() method.
-     * 
+     * <p/>
      * This implementation of WeatherResults.Stub plays the role of
      * Invoker in the Broker Pattern since it dispatches the upcall to
      * sendResults().
      */
     private final WeatherResults.Stub mWeatherResults =
-        new WeatherResults.Stub() {
-            /**
-             * This method is invoked by the WeatherServiceAsync to
-             * return the results back.
-             */
-            @Override
-            public void sendResults(final WeatherData weatherResults)
-                throws RemoteException {
-                // Pass the results back to the Presenter's
-                // displayResults() method.
-                // TODO -x- you fill in here.
-                mPresenter.get().displayResults(weatherResults, null);
-            }
+            new WeatherResults.Stub() {
+                /**
+                 * This method is invoked by the WeatherServiceAsync to
+                 * return the results back.
+                 */
+                @Override
+                public void sendResults(final WeatherData weatherResults)
+                        throws RemoteException {
+                    // Pass the results back to the Presenter's
+                    // displayResults() method.
+                    // TODO -x- you fill in here.
+                    mPresenter.get().displayResults(weatherResults, null);
+                }
 
-            /**
-             * This method is invoked by the WeatherServiceAsync to
-             * return error results back.
-             */
-            @Override
-            public void sendError(final String reason)
-                throws RemoteException {
-                // Pass the results back to the Presenter's
-                // displayResults() method.
-                // TODO -x- you fill in here.
-                mPresenter.get().displayResults(null, reason);
-            }
-        };
+                /**
+                 * This method is invoked by the WeatherServiceAsync to
+                 * return error results back.
+                 */
+                @Override
+                public void sendError(final String reason)
+                        throws RemoteException {
+                    // Pass the results back to the Presenter's
+                    // displayResults() method.
+                    // TODO -x- you fill in here.
+                    mPresenter.get().displayResults(
+                            null
+                            , String.format("No weather data for location \"%s\" found", mLocation)
+                    );
+                }
+            };
 
     /**
      * Initiate the service binding protocol.
      */
     private void bindService() {
         Log.d(TAG,
-              "calling bindService()");
+                "calling bindService()");
 
         // Launch the Weather Bound Services if they aren't already
         // running via a call to bindService(), which binds this
         // activity to the WeatherService* if they aren't already
         // bound.
 
-        // TODO -- you fill in here.
+        // TODO -x- you fill in here.
+        // Bind this activity to the DownloadBoundService* Services if
+        // they aren't already bound Use mBoundSync/mBoundAsync
+        if (mWeatherCall == null) {
+            mPresenter.get()
+                    .getApplicationContext()
+                    .bindService(WeatherServiceSync.makeIntent
+                                    (mPresenter.get()
+                                            .getActivityContext()),
+                            mServiceConnectionSync,
+                            Context.BIND_AUTO_CREATE);
+            Log.d(TAG,
+                    "Calling bindService() on DownloadBoundServiceSync");
+        }
+        if (mWeatherRequest == null) {
+            mPresenter.get()
+                    .getApplicationContext()
+                    .bindService(WeatherServiceAsync.makeIntent
+                                    (mPresenter.get()
+                                            .getActivityContext()),
+                            mServiceConnectionAsync,
+                            Context.BIND_AUTO_CREATE);
+            Log.d(TAG,
+                    "Calling bindService() on DownloadBoundServiceAsync");
+        }
     }
 
     /**
@@ -150,23 +194,51 @@ public class WeatherModel
      */
     private void unbindService() {
         Log.d(TAG,
-              "calling unbindService()");
+                "calling unbindService()");
 
-        // TODO -- you fill in here to unbind from the WeatherService*.
+        // TODO -x- you fill in here to unbind from the WeatherService*.
+        if (mWeatherCall != null)
+            mPresenter.get()
+                    .getApplicationContext()
+                    .unbindService(mServiceConnectionSync);
+        if (mWeatherRequest != null)
+            mPresenter.get()
+                    .getApplicationContext()
+                    .unbindService(mServiceConnectionAsync);
     }
 
     /**
      * Initiate the asynchronous weather lookup.
      */
     public boolean getWeatherAsync(String location) {
-        // TODO -- you fill in here.
-
+        // TODO -x- you fill in here.
+        if (mWeatherRequest != null) {
+            try {
+                mLocation = location;
+                mWeatherRequest.getCurrentWeather(location, mWeatherResults);
+            } catch (RemoteException e) {
+                Log.d(TAG, "RemoteException", e);
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
      * Initiate the synchronous weather lookup.
      */
     public WeatherData getWeatherSync(String location) {
-        // TODO -- you fill in here.
+        // TODO -x- you fill in here.
+        if (mWeatherCall != null) {
+            try {
+                mLocation = location;
+                List<WeatherData> weatherDataList
+                        = mWeatherCall.getCurrentWeather(location);
+                return weatherDataList != null ? weatherDataList.get(0) : null;
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 }

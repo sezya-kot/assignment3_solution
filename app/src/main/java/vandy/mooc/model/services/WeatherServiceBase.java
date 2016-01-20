@@ -62,6 +62,7 @@ public class WeatherServiceBase
     public void onCreate() {
         super.onCreate();
         // TODO -x?- you fill in here.
+        Log.d(TAG, "onCreate()");
         mCache = new WeatherCache();
     }
 
@@ -74,6 +75,7 @@ public class WeatherServiceBase
         super.onDestroy();
 
         // TODO -x?- you fill in here.
+        Log.d(TAG, "onDestroy()");
         mCache = null;
     }
 
@@ -94,8 +96,10 @@ public class WeatherServiceBase
             return mCache.get(location);
         } else {
             weatherDataList = getResultsFromWeatherService(location);
-            mCache.put(location, weatherDataList, DEFAULT_CACHE_TIMEOUT);
-            return getResultsFromWeatherService(location);
+            if (weatherDataList != null) {
+                mCache.put(location, weatherDataList, DEFAULT_CACHE_TIMEOUT);
+            }
+            return weatherDataList;
         }
     }
 

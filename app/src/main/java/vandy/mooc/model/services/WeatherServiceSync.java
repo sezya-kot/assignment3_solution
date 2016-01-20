@@ -47,6 +47,7 @@ public class WeatherServiceSync
      */
     @Override
     public IBinder onBind(Intent intent) {
+        Log.d(TAG, "onBind()");
         return mWeatherCallImpl;
     }
 

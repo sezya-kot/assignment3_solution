@@ -48,12 +48,13 @@ public class WeatherDataJsonParser {
         throws IOException {
         // TODO -x- you fill in here.
         List<WeatherData> list = new ArrayList<>();
-        reader.beginArray();
 
-        while (reader.hasNext()) {
+//        reader.beginArray();
+
+//        while (reader.hasNext()) {
             list.add(parseJsonWeatherData(reader));
-        }
-        reader.endArray();
+//        }
+//        reader.endArray();
         return list;
     }
 
